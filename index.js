@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
 
     const coffeeCollection = client.db("coffeeDB").collection("coffees");
+    const userCollection = client.db("coffeeDB").collection("users");
 
     app.get("/coffees", async (req, res) => {
       const cursor = await coffeeCollection.find().toArray();
@@ -53,7 +54,11 @@ async function run() {
       const updateDoc = {
         $set: updateCoffee,
       };
-      const result = await coffeeCollection.updateOne(filter, updateDoc, options);
+      const result = await coffeeCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
@@ -61,6 +66,40 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //User related APIs
+    app.post("/users", async (req, res) => {
+      const userProfile = req.body;
+      const result = await userCollection.insertOne(userProfile);
+      res.send(result);
+      // console.log(userProfile);
+    });
+
+    app.patch("/users", async (req, res) => {
+      const { email, lastSignInTime } = req.body;
+      const filter = { email: email };
+
+      const updateDoc = {
+        $set: {
+          lastSignInTime: lastSignInTime,
+        },
+      };
+
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const cursor = await userCollection.find().toArray();
+      res.send(cursor);
+    });
+
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     });
 
